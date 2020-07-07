@@ -130,7 +130,7 @@ json_post_task = {
 
 url_post_task = url + '/resize/post_task/Pol/1234/'
 r_post_task = requests.post(url_post_task, json=json_post_task)
-print(r_post_task.text, r_reg)
+print(r_post_task.text, r_post_task)
 post_task = json.loads(r_post_task.text)
 idf = post_task['Upload. Your personal ind = ']
 
@@ -142,4 +142,8 @@ idf = post_task['Upload. Your personal ind = ']
 
 url_get_image = url + '/resize/task_get/Pol/1234/c1fc31df-abfe-4966-a45a-472a27ac65c7/'
 r_get_image = requests.get(url_get_image)
-print(r_get_image.text)
+print(r_get_image.text, r_get_image)
+
+'''
+
+'''

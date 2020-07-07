@@ -65,7 +65,7 @@ def add_task_to_db(request, user_id):
 def get_image_in_db(identifier, user_id):
     task_db = Tasks.query.filter(Tasks.identifier == identifier, Tasks.user_id == user_id).first()
     if task_db is None:
-        answer = {'Status': 'Identifier not found'}, 200
+        answer = {'Status': 'Identifier not found'}
         return answer
 
     if task_db.done:
@@ -75,7 +75,7 @@ def get_image_in_db(identifier, user_id):
             'name_pic': task_db.name_pic,
             'pic_base64': task_db.pic_base64,
         }
-        answer = {'Status': task}, 200
+        answer = {'Status': task}
         return answer
-    answer = {'Status': 'Your image is not ready'}, 200
+    answer = {'Status': 'Your image is not ready'}
     return answer
