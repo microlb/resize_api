@@ -44,6 +44,19 @@ def scale_image(image_b, width=None, height=None):
     return scaled_image
 
 
+def add_new_user(username, password):
+    user = User.query.filter(User.username == username).first()
+
+    if user is None:
+        user_add = User(username=username, password=password)
+        db.session.add(user_add)
+        db.session.commit()
+        answer = username + ' registration passed'
+        #logger.info('%s successfully registered', username)
+        return {'Status': answer}, 201
+    #logger.info('%s username with this name already exist', username)
+    return {'Status': 'Username with this name already exist'}, 200
+
 def get_task_in_db(identifier, user_id):
     task_db = Tasks.query.filter(Tasks.identifier == identifier, Tasks.user_id == user_id).first()
     return task_db

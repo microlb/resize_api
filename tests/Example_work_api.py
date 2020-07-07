@@ -87,7 +87,7 @@ url = 'http://127.0.0.1:5000/'
 
 url_reg = url + '/resize/registration/'
 
-json_reg = {'username': 'Pol',
+json_reg = {'username': 'Jac',
             'password': '1234'}
 
 r_reg = requests.post(url_reg, json=json_reg)

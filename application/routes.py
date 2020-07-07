@@ -1,7 +1,7 @@
 from flask import jsonify, abort, make_response, request
 from logging.handlers import RotatingFileHandler
 from application.models import Tasks, User
-from application.logic import add_task_to_db, get_image_in_db, delete_task, rename_image_in_db, get_all_identifier
+from application.logic import add_task_to_db, get_image_in_db, delete_task, rename_image_in_db, get_all_identifier, add_new_user
 from application import db
 from application import app
 from redis import Redis
@@ -54,17 +54,9 @@ def create_user():
     username = request.json['username']
     password = request.json['password']
 
-    user = db.session.query(User).filter(User.username == username).first()
+    answer, status = add_new_user(username, password)
 
-    if user is None:
-        user_add = User(username=username, password=password)
-        db.session.add(user_add)
-        db.session.commit()
-        answer = username + ' registration passed'
-        logger.info('%s successfully registered', username)
-        return jsonify({'Status': answer}), 201
-    logger.info('%s username with this name already exist', username)
-    return jsonify({'Status': 'Username with this name already exist'}), 200
+    return jsonify(answer), status
 
 
 @app.route('/resize/get_all_identifier/<string:username>/<string:password>/', methods=['GET'])
