@@ -57,6 +57,7 @@ def add_new_user(username, password):
     #logger.info('%s username with this name already exist', username)
     return {'Status': 'Username with this name already exist'}, 200
 
+
 def get_task_in_db(identifier, user_id):
     task_db = Tasks.query.filter(Tasks.identifier == identifier, Tasks.user_id == user_id).first()
     return task_db

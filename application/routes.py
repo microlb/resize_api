@@ -1,45 +1,23 @@
-from flask import jsonify, abort, make_response, request
-from logging.handlers import RotatingFileHandler
+from flask import jsonify, abort, request
 from application.models import Tasks, User
 from application.logic import add_task_to_db, get_image_in_db, delete_task, rename_image_in_db, get_all_identifier, add_new_user
 from application import db
 from application import app
 from redis import Redis
-import logging
 import uuid
 import rq
 
 app.app_context().push()
-
-logger = logging.getLogger(__name__)
-file_handler = RotatingFileHandler('log_rest_app.log', maxBytes=10240, backupCount=10)
-file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-file_handler.setLevel(logging.INFO)
-
-
-@app.errorhandler(405)
-def not_found(error):
-    return make_response(jsonify({'error': 'Method not found'}), 405)
-
-
-@app.errorhandler(400)
-def not_found(error):
-    return make_response(jsonify({'error': 'Bad request'}), 400)
-
-
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)
 
 
 def auth(username, password):
     '''Игрущечная авторизация пользователя'''
     user = db.session.query(User).filter(User.username == username).first()
     if user is None:
-        logger.info('User with this name does not exist.')
+        #logger.info('User with this name does not exist.')
         return False
     if password != user.password:
-        logger.info('Incorrect password.')
+        #logger.info('Incorrect password.')
         return False
     return user.id
 
@@ -48,7 +26,7 @@ def auth(username, password):
 def create_user():
     '''Регистрация нового пользователя'''
     if not request.json or not 'username' or not "password" in request.json:
-        logger.error('%s Incorrect request json', request.json)
+        #logger.error('%s Incorrect request json', request.json)
         abort(400)
 
     username = request.json['username']
@@ -89,13 +67,13 @@ def create_db_task_(username, password):
         return jsonify({'Status': 'User is not exist or incorrect password'}), 200
 
     if not request.json or not 'name_pic' or not "pic_base64" in request.json:
-        logger.error('%s Incorrect request json', request.json)
+        #logger.error('%s Incorrect request json', request.json)
         abort(400)
     if 'height' in request.json and type(request.json['height']) is not int or not (1 < request.json['height'] < 9999):
-        logger.error('%s Incorrect HEIGHT in request json', request.json)
+        #logger.error('%s Incorrect HEIGHT in request json', request.json)
         abort(400)
     if 'width' in request.json and type(request.json['width']) is not int or not (1 < request.json['width'] < 9999):
-        logger.error('%s Incorrect width in request json', request.json)
+        #logger.error('%s Incorrect width in request json', request.json)
         abort(400)
 
     height = request.json['height'],
@@ -110,7 +88,7 @@ def create_db_task_(username, password):
                      connection=Redis.from_url('redis://'))  # Вызывается обработка картинки в фоновом режиме
     queue.enqueue('application.tasks.scale_img_db', identifier, user_id)
 
-    logger.info('Task with identifier %s successfully processed', identifier)
+    #logger.info('Task with identifier %s successfully processed', identifier)
 
     return jsonify({'Upload. Your personal ind = ': identifier}), 201
 
