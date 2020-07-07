@@ -1,6 +1,7 @@
 from flask import jsonify, abort, make_response, request
 from logging.handlers import RotatingFileHandler
 from application.models import Tasks, User
+from application.logic import add_task_to_db, get_image_in_db
 from application import db
 from application import app
 from redis import Redis
@@ -89,7 +90,9 @@ def get_db_img(identifier, username, password):
     if not user_id:
         return jsonify({'Status': 'User is not exist or incorrect password'})
 
-    task_db = Tasks.query.filter(Tasks.identifier == identifier, Tasks.user_id == user_id).first()
+    answer = get_image_in_db(identifier, user_id)
+    return jsonify(answer)
+'''   task_db = Tasks.query.filter(Tasks.identifier == identifier, Tasks.user_id == user_id).first()
 
     if task_db is None:
         logger.info('Identifier %s not found', identifier)
@@ -104,7 +107,8 @@ def get_db_img(identifier, username, password):
         }
         logger.info('%s send', task)
         return jsonify({'Status': task}), 200
-    return jsonify({'Status': 'Your image is not ready'}), 200
+    return jsonify({'Status': 'Your image is not ready'}), 200'''
+
 
 
 @app.route('/resize/post_task/<string:username>/<string:password>/', methods=['POST'])
@@ -124,28 +128,14 @@ def create_db_task_(username, password):
         logger.error('%s Incorrect width in request json', request.json)
         abort(400)
 
-    height = request.json['height'],
-    width = request.json['width'],
-    name_pic = request.json['name_pic'],
-    pic_base64 = request.json.get('pic_base64', ""),
-    identifier = str(uuid.uuid4())                      # Генерируем индефикатор для каждой задачи()
-                                                        # (этого можно было в ручную не делать,
-                                                        # а взять индефикатор задачи RQ)
-    task = Tasks(name_pic=name_pic[0],
-                 height=height[0],
-                 width=width[0],
-                 pic_base64=pic_base64[0],
-                 identifier=identifier,
-                 user_id=user_id)
-    db.session.add(task)
-    db.session.commit()
+    identifier = add_task_to_db(request, user_id)
 
     queue = rq.Queue('api-tasks', connection=Redis.from_url('redis://'))   #  Вызывается обработка картинки в фоновом режиме
     queue.enqueue('application.tasks.scale_img_db', identifier, user_id)
 
     logger.info('Task with identifier %s successfully processed', identifier)
-    answer = identifier
-    return jsonify({'Upload. Your personal ind = ': answer}), 201
+
+    return jsonify({'Upload. Your personal ind = ': identifier}), 201
 
 
 @app.route('/resize/delete_task/<string:username>/<string:password>/<string:identifier>/', methods=['DELETE'])

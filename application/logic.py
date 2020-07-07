@@ -1,8 +1,11 @@
+from application.models import Tasks, User
+from application import db
 from io import BytesIO
 from PIL import Image
+import logging
 import base64
 import io
-
+import uuid
 
 
 def img_b_to_base64str(image_b):
@@ -27,9 +30,6 @@ def scale_image(image_b, width=None, height=None):
         в пикселях. Но не больше исходного размера'''
     original_image = Image.open(io.BytesIO(image_b))
     w, h = original_image.size
-    #print('The original image size is {wide} wide x {height} '
-    #     'high'.format(wide=w, height=h))
-
     if width and height:
         max_size = (width, height)
     elif width:
@@ -39,11 +39,43 @@ def scale_image(image_b, width=None, height=None):
     else:
         # No width or height specified
         raise RuntimeError('Width or height required!')
-
     original_image.thumbnail(max_size, Image.ANTIALIAS)
     scaled_image = original_image
-    width, height = scaled_image.size
-    #scaled_image.show()  вывод получившейся картинки на экран(для наглядной проверки)
-    # print('The scaled image size is {wide} wide x {height} '
-    #      'high'.format(wide=width, height=height))
     return scaled_image
+
+
+def add_task_to_db(request, user_id):
+    height = request.json['height'],
+    width = request.json['width'],
+    name_pic = request.json['name_pic'],                # Генерируем индефикатор для каждой задачи()
+    pic_base64 = request.json.get('pic_base64', ""),    # (этого можно было в ручную не делать,
+    identifier = str(uuid.uuid4())                      # а взять индефикатор задачи RQ)
+
+    task = Tasks(name_pic=name_pic[0],
+                 height=height[0],
+                 width=width[0],
+                 pic_base64=pic_base64[0],
+                 identifier=identifier,
+                 user_id=user_id)
+    db.session.add(task)
+    db.session.commit()
+    return identifier
+
+
+def get_image_in_db(identifier, user_id):
+    task_db = Tasks.query.filter(Tasks.identifier == identifier, Tasks.user_id == user_id).first()
+    if task_db is None:
+        answer = {'Status': 'Identifier not found'}, 200
+        return answer
+
+    if task_db.done:
+        task = {
+            'height': task_db.height,
+            'width': task_db.width,
+            'name_pic': task_db.name_pic,
+            'pic_base64': task_db.pic_base64,
+        }
+        answer = {'Status': task}, 200
+        return answer
+    answer = {'Status': 'Your image is not ready'}, 200
+    return answer

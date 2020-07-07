@@ -140,3 +140,6 @@ idf = post_task['Upload. Your personal ind = ']
  <Response [200]>
 '''
 
+url_get_image = url + '/resize/task_get/Pol/1234/c1fc31df-abfe-4966-a45a-472a27ac65c7/'
+r_get_image = requests.get(url_get_image)
+print(r_get_image.text)
