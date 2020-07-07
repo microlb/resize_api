@@ -6,8 +6,6 @@ from application import db
 import time
 
 
-
-
 app.app_context().push()
 
 
