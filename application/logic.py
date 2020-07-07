@@ -44,12 +44,12 @@ def scale_image(image_b, width=None, height=None):
     return scaled_image
 
 
-def add_task_to_db(request, user_id):
-    height = request.json['height'],
-    width = request.json['width'],
-    name_pic = request.json['name_pic'],                # Генерируем индефикатор для каждой задачи()
-    pic_base64 = request.json.get('pic_base64', ""),    # (этого можно было в ручную не делать,
-    identifier = str(uuid.uuid4())                      # а взять индефикатор задачи RQ)
+def get_task_in_db(identifier, user_id):
+    task_db = Tasks.query.filter(Tasks.identifier == identifier, Tasks.user_id == user_id).first()
+    return task_db
+
+
+def add_task_to_db(user_id, height, width, name_pic, identifier, pic_base64):
 
     task = Tasks(name_pic=name_pic[0],
                  height=height[0],
@@ -63,10 +63,10 @@ def add_task_to_db(request, user_id):
 
 
 def get_image_in_db(identifier, user_id):
-    task_db = Tasks.query.filter(Tasks.identifier == identifier, Tasks.user_id == user_id).first()
+    task_db = get_task_in_db(identifier, user_id)
+
     if task_db is None:
-        answer = {'Status': 'Identifier not found'}
-        return answer
+        return {'Status': 'Identifier not found'}, 200
 
     if task_db.done:
         task = {
@@ -75,7 +75,44 @@ def get_image_in_db(identifier, user_id):
             'name_pic': task_db.name_pic,
             'pic_base64': task_db.pic_base64,
         }
-        answer = {'Status': task}
-        return answer
-    answer = {'Status': 'Your image is not ready'}
-    return answer
+        return {'Status': task}, 200
+    return {'Status': 'Your image is not ready'}, 200
+
+
+def delete_task(identifier, user_id):
+    task_db = get_task_in_db(identifier, user_id)
+
+    if task_db is None:
+        #logger.info('Identifier %s not found', identifier)
+        return {'Status': 'Identifier not found'}, 200
+
+    db.session.delete(task_db)
+    db.session.commit()
+    #logger.info('Task with identifier %s deleted', identifier)
+    return {'Status': 'Task deleted'}, 201
+
+
+def rename_image_in_db(identifier, user_id, new_name_pic):
+    task_db = get_task_in_db(identifier, user_id)
+
+    if task_db is None:
+        # logger.info('Identifier %s not found', identifier)
+        return {'Status': 'Identifier not found'}, 200
+
+    old_name = task_db.name_pic
+    task_db.name_pic = new_name_pic
+    db.session.add(task_db)
+    db.session.commit()
+    #logger.info('Name pic changed %s => %s, identifier = %s', old_name, new_name_pic, identifier)
+    return {'Status': 'Name pic changed'}, 201
+
+
+def get_all_identifier(user_id):
+    task_db = Tasks.query.filter(Tasks.user_id == user_id).all()
+    ind_and_name = []
+    for task in task_db:
+        t = task
+        ind_name = [t.identifier, t.name_pic, t.done]
+        ind_and_name.append(ind_name)
+    return {'Status': ind_and_name}, 200
+
