@@ -91,24 +91,7 @@ def get_db_img(identifier, username, password):
         return jsonify({'Status': 'User is not exist or incorrect password'})
 
     answer = get_image_in_db(identifier, user_id)
-    return jsonify(answer)
-'''   task_db = Tasks.query.filter(Tasks.identifier == identifier, Tasks.user_id == user_id).first()
-
-    if task_db is None:
-        logger.info('Identifier %s not found', identifier)
-        return jsonify({'Status': 'Identifier not found'})
-
-    if task_db.done:
-        task = {
-            'height': task_db.height,
-            'width': task_db.width,
-            'name_pic': task_db.name_pic,
-            'pic_base64': task_db.pic_base64,
-        }
-        logger.info('%s send', task)
-        return jsonify({'Status': task}), 200
-    return jsonify({'Status': 'Your image is not ready'}), 200'''
-
+    return jsonify(answer), 200
 
 
 @app.route('/resize/post_task/<string:username>/<string:password>/', methods=['POST'])
